@@ -1,110 +1,138 @@
-# Toko Kita: Aplikasi Mobile CRUD Produk dengan REST API CodeIgniter 4
+# ##################################################
+# LAPORAN PRAKTIKUM PEMROGRAMAN MOBILE - PERTEMUAN 4
+# ##################################################
+
+# Toko Kita: Aplikasi Mobile CRUD Produk dengan REST API CodeIgniter 4 (Dasar Koneksi & HTTP Request)
 
 | | |
 |---|---|
 | **Nama** | Fariz Rahman Syahida |
 | **NIM** | H1D024008 |
 | **Shift** | Awal F / Akhir C |
-| **Praktikum** | Pemrograman Mobile |
+| **Praktikum** | Pemrograman Mobile (Pertemuan 4) |
 
 ## Deskripsi
-
-Aplikasi mobile Flutter bernama **Toko Kita** yang terhubung ke REST API berbasis CodeIgniter 4. Pengguna dapat registrasi, login, dan mengelola data produk (tambah, lihat, ubah, hapus) yang tersimpan di MariaDB melalui API.
+Praktikum Pertemuan 4 berfokus pada pembangunan fondasi awal aplikasi mobile Flutter **Toko Kita** agar dapat terhubung dengan REST API backend berbasis CodeIgniter 4 (`ci4-api`). Mahasiswa mempelajari cara melakukan koneksi jaringan dari emulator ke server lokal, menangani exception jaringan, serta mengimplementasikan operasi CRUD dasar secara *synchronous/asynchronous* menggunakan package `http` dan setState standar.
 
 ```
 Aplikasi Flutter (tokokita) → HTTP/JSON → CodeIgniter 4 (ci4-api) → MariaDB (toko_api)
 ```
 
-## Fitur
+## Fitur (Pertemuan 4)
+- Koneksi jaringan dasar antara Flutter dan backend API lokal (mengatasi *SocketException* & *URL parsing*).
+- Form Registrasi akun baru.
+- Form Login dan penyimpanan sesi token menggunakan helper.
+- Menampilkan daftar produk (*List Produk*) dari database melalui endpoint API.
+- Form Tambah, Detail, Ubah, dan Hapus produk secara langsung.
+- Fitur Logout sederhana.
 
-- Registrasi akun baru
-- Login dan menerima token dari API
-- List produk dari API, dengan tarik untuk memuat ulang
-- Tambah produk (`POST /produk`)
-- Detail produk dengan tombol edit dan hapus
-- Ubah produk (`PUT /produk/{id}`)
-- Hapus produk dengan konfirmasi (`DELETE /produk/{id}`)
-- Logout dari side menu
+## Teknologi (Pertemuan 4)
+* **Frontend:** Flutter, Dart, package `http`
+* **Backend:** CodeIgniter 4, PHP 8.5
+* **Database:** MariaDB
+* **Web Server:** Apache (Arch Linux)
 
-## Teknologi
+## Endpoint API Utama
+| Method | Endpoint | Fungsi |
+|---|---|---|
+| POST | `/registrasi` | Registrasi akun baru |
+| POST | `/login` | Autentikasi login & mengambil token |
+| GET | `/produk` | Mengambil seluruh data produk |
+| POST | `/produk` | Menambahkan data produk baru |
+| GET | `/produk/{id}` | Menampilkan detail produk |
+| PUT | `/produk/{id}` | Mengubah data produk |
+| DELETE | `/produk/{id}` | Menghapus data produk |
 
-| Bagian | Teknologi |
+---
+
+# ##################################################
+# LAPORAN PRAKTIKUM PEMROGRAMAN MOBILE - PERTEMUAN 5
+# ##################################################
+
+# Toko Kita: Implementasi State Management BLoC & Pemisahan Arsitektur
+
+| | |
 |---|---|
-| Frontend | Flutter, Dart, package `http` |
-| Backend | CodeIgniter 4, PHP 8.5 |
-| Database | MariaDB |
-| Web server | Apache (Arch Linux) |
-| Editor | Cursor |
+| **Nama** | Fariz Rahman Syahida |
+| **NIM** | H1D024008 |
+| **Shift** | Awal F / Akhir C |
+| **Praktikum** | Pemrograman Mobile (Pertemuan 5) |
 
-## Struktur Project
+## Deskripsi
+Pada **Pertemuan 5**, fokus praktikum ditingkatkan ke arah penerapan arsitektur perangkat lunak yang lebih profesional, yaitu **State Management menggunakan BLoC (Business Logic Component)**. Seluruh logika pemanggilan API, pengelolaan state *loading*, *success*, dan *error* dipisahkan dari tampilan UI. Selain itu, ditambahkan penanganan dialog interaktif untuk skenario sukses maupun gagal (seperti validasi gagal login, gagal registrasi, dan konfirmasi aksi).
 
+```
+Flutter UI (Widgets) ⇄ BLoC Events/States ⇄ API Helpers ⇄ CodeIgniter 4 Backend
+```
+
+## Fitur & Pembaruan (Pertemuan 5)
+- Migrasi logika state UI ke dalam arsitektur **BLoC** (`registrasi_bloc`, `login_bloc`, `logout_bloc`, dan `produk_bloc`).
+- Penanganan skenario gagal login dan registrasi menggunakan komponen `WarningDialog`.
+- Penanganan notifikasi sukses menggunakan komponen `SuccessDialog`.
+- Pemisahan total antara struktur *Business Logic* dan *User Interface* agar kode lebih bersih dan teruji.
+
+## Struktur Project Keseluruhan (Pertemuan 4 & 5)
 ```
 tokokita/
 ├── lib/
 │   ├── main.dart
+│   ├── bloc/
+│   │   ├── login_bloc.dart
+│   │   ├── logout_bloc.dart
+│   │   ├── produk_bloc.dart
+│   │   └── registrasi_bloc.dart
+│   ├── helpers/
+│   │   ├── api.dart
+│   │   ├── api_url.dart
+│   │   ├── app_exception.dart
+│   │   └── user_info.dart
 │   ├── model/
 │   │   ├── login.dart
 │   │   ├── produk.dart
 │   │   └── registrasi.dart
-│   └── ui/
-│       ├── api.dart
-│       ├── login_page.dart
-│       ├── registrasi_page.dart
-│       ├── produk_page.dart
-│       ├── produk_form.dart
-│       └── produk_detail.dart
-└── docs/                 ← screenshot aplikasi
+│   ├── ui/
+│   │   ├── login_page.dart
+│   │   ├── registrasi_page.dart
+│   │   ├── produk_page.dart
+│   │   ├── produk_form.dart
+│   │   └── produk_detail.dart
+│   └── widget/
+│       ├── success_dialog.dart
+│       └── warning_dialog.dart
+└── docs/                     ← Kumpulan screenshot bukti uji coba
 ```
 
-## Endpoint API
+## Dokumentasi Tampilan & Skenario Pengujian (Screenshot)
 
-| Method | Endpoint | Fungsi |
-|---|---|---|
-| POST | `/registrasi` | Registrasi akun |
-| POST | `/login` | Login, mengembalikan token |
-| GET | `/produk` | Daftar semua produk |
-| POST | `/produk` | Tambah produk |
-| GET | `/produk/{id}` | Detail produk |
-| PUT | `/produk/{id}` | Ubah produk |
-| DELETE | `/produk/{id}` | Hapus produk |
+Berikut adalah lampiran visual dari seluruh skenario pengujian aplikasi (baik kondisi berhasil maupun gagal):
 
-## Cara Menjalankan
-
-**1. Jalankan backend**
-
-```bash
-sudo systemctl start mariadb httpd
-```
-
-**2. Jalankan aplikasi Flutter**
-
-```bash
-cd tokokita
-flutter pub get
-flutter run
-```
-
-Untuk emulator Android, jalankan `adb reverse tcp:80 tcp:80` agar emulator dapat mengakses Apache di laptop, dan pastikan `lib/ui/api.dart` berisi `baseUrl` yang sesuai.
-
-**Akun uji:** `admin@admin.com` / `admin`
-
-## Tampilan Aplikasi
-
-**Halaman Login**
+**1. Halaman Login**
 ![Halaman Login](docs/login.png)
 
-**List Produk**
+**2. Skenario Login Gagal (Peringatan)**
+![Login Gagal](docs/gagallogin.png)
+
+**3. Skenario Registrasi Berhasil**
+![Registrasi Berhasil](docs/regisberhasil.png)
+
+**4. Skenario Registrasi Gagal**
+![Registrasi Gagal](docs/regisgagal.png)
+
+**5. Halaman List Produk**
 ![List Produk](docs/listproduk.png)
 
-**Tambah Produk**
+**6. Form Tambah Produk**
 ![Tambah Produk](docs/tambahproduk.png)
 
-**Detail Produk**
+**7. Halaman Detail Produk**
 ![Detail Produk](docs/detailproduk.png)
 
-**Ubah Produk**
+**8. Form Ubah/Edit Produk**
 ![Ubah Produk](docs/editproduk.png)
 
-## Kesimpulan
+---
 
-Praktikum ini memberikan pemahaman tentang cara menghubungkan aplikasi Flutter dengan REST API. Mahasiswa mempelajari pemanggilan HTTP (GET, POST, PUT, DELETE) menggunakan package `http`, konversi JSON ke model Dart, dan pengelolaan state dengan `setState`. Selain itu, mahasiswa juga membangun API CRUD dengan CodeIgniter 4 dan menguji endpoint-nya. Tantangan utama adalah konfigurasi jaringan antara emulator Android dan server lokal, yang diatasi dengan `adb reverse`.
+## Kesimpulan Umum
+
+* **Pertemuan 4** memberikan dasar yang kuat dalam memahami cara kerja komunikasi data secara jaringan antara aplikasi seluler Flutter dengan server backend lokal (CodeIgniter 4 & MariaDB) menggunakan HTTP request dasar.
+* **Pertemuan 5** menyempurnakan aplikasi tersebut dengan menerapkan prinsip arsitektur profesional menggunakan pola **BLoC**, sehingga pemisahan tugas antara pemrosesan data (logika bisnis) dan tampilan antarmuka menjadi terstruktur dengan baik serta siap untuk pengembangan skala besar.

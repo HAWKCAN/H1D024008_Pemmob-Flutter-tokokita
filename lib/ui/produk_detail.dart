@@ -1,94 +1,98 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../model/produk.dart';
-import 'api.dart';
-import 'produk_form.dart';
+import 'package:tokokita/model/produk.dart';
+import 'package:tokokita/ui/produk_form.dart';
 
-class ProdukDetail extends StatelessWidget {
-  final Produk produk;
-  const ProdukDetail({super.key, required this.produk});
+class ProdukDetail extends StatefulWidget {
+  Produk? produk;
 
-  Future<void> _hapus(BuildContext context) async {
-    final yakin = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        content: const Text('Yakin ingin menghapus data ini?'),
-        actions: [
-          OutlinedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Ya'),
-          ),
-          OutlinedButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-        ],
-      ),
-    );
-    if (yakin != true) return;
+  ProdukDetail({Key? key, this.produk}) : super(key: key);
 
-    try {
-      final response = await http
-          .delete(Uri.parse('$baseUrl/produk/${produk.id}'))
-          .timeout(const Duration(seconds: 10));
-      final body = jsonDecode(response.body);
-      if (!context.mounted) return;
-      if (body['status'] == true) {
-        Navigator.pop(context, true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(body['data'].toString())),
-        );
-      }
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menghapus: $e')),
-      );
-    }
-  }
+  @override
+  _ProdukDetailState createState() => _ProdukDetailState();
+}
 
+class _ProdukDetailState extends State<ProdukDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Produk')),
+      appBar: AppBar(
+        title: const Text('Detail Produk'),
+      ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Kode : ${produk.kodeProduk ?? '-'}',
-                style: const TextStyle(fontSize: 20)),
-            Text('Nama : ${produk.namaProduk ?? '-'}',
-                style: const TextStyle(fontSize: 18)),
-            Text('Harga : Rp. ${produk.hargaProduk ?? 0}',
-                style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                OutlinedButton(
-                  onPressed: () async {
-                    final changed = await Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => ProdukForm(produk: produk)),
-                    );
-                    if (changed == true && context.mounted) {
-                      Navigator.pop(context, true);
-                    }
-                  },
-                  child: const Text('EDIT'),
-                ),
-                OutlinedButton(
-                  onPressed: () => _hapus(context),
-                  child: const Text('DELETE'),
-                ),
-              ],
+            Text(
+              "Kode : ${widget.produk!.kodeProduk}",
+              style: const TextStyle(fontSize: 20.0),
             ),
+            Text(
+              "Nama : ${widget.produk!.namaProduk}",
+              style: const TextStyle(fontSize: 18.0),
+            ),
+            Text(
+              "Harga : Rp. ${widget.produk!.hargaProduk.toString()}",
+              style: const TextStyle(fontSize: 18.0),
+            ),
+            _tombolHapusEdit()
           ],
         ),
       ),
     );
+  }
+
+  Widget _tombolHapusEdit() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Tombol Edit
+        OutlinedButton(
+          child: const Text("EDIT"),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProdukForm(
+                  produk: widget.produk!,
+                ),
+              ),
+            );
+          },
+        ),
+        // Tombol Hapus
+        OutlinedButton(
+          child: const Text("DELETE"),
+          onPressed: () => confirmHapus(),
+        ),
+      ],
+    );
+  }
+
+  void confirmHapus() {
+    AlertDialog alertDialog = AlertDialog(
+      content: const Text("Yakin ingin menghapus data ini?"),
+      actions: [
+        // tombol hapus
+        OutlinedButton(
+          child: const Text("Ya"),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProdukForm(
+                  produk: widget.produk!,
+                ),
+              ),
+            );
+          },
+        ),
+        // tombol batal
+        OutlinedButton(
+          child: const Text("Batal"),
+          onPressed: () => Navigator.pop(context),
+        )
+      ],
+    );
+
+    showDialog(builder: (context) => alertDialog, context: context);
   }
 }

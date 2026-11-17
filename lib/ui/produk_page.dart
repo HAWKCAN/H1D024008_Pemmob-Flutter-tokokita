@@ -1,71 +1,37 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../model/produk.dart';
-import 'api.dart';
-import 'login_page.dart';
-import 'produk_detail.dart';
-import 'produk_form.dart';
+import 'package:tokokita/bloc/logout_bloc.dart';
+import 'package:tokokita/bloc/produk_bloc.dart';
+import 'package:tokokita/model/produk.dart';
+import 'package:tokokita/ui/login_page.dart';
+import 'package:tokokita/ui/produk_detail.dart';
+import 'package:tokokita/ui/produk_form.dart';
 
 class ProdukPage extends StatefulWidget {
-  const ProdukPage({super.key});
+  const ProdukPage({Key? key}) : super(key: key);
 
   @override
-  State<ProdukPage> createState() => _ProdukPageState();
+  _ProdukPageState createState() => _ProdukPageState();
 }
 
 class _ProdukPageState extends State<ProdukPage> {
-  List<Produk> _produkList = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchProduk();
-  }
-
-  Future<void> _fetchProduk() async {
-    setState(() => _isLoading = true);
-    try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/produk'))
-          .timeout(const Duration(seconds: 10));
-      final body = jsonDecode(response.body);
-      if (!mounted) return;
-      if (body['status'] == true) {
-        final List data = body['data'];
-        setState(() {
-          _produkList = data.map((e) => Produk.fromJson(e)).toList();
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memuat produk: $e')),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _tambahProduk() async {
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => const ProdukForm()),
-    );
-    if (result == true) _fetchProduk();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('List Produk'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _tambahProduk,
-          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 20.0),
+            child: GestureDetector(
+              child: const Icon(Icons.add, size: 26.0),
+              onTap: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProdukForm()),
+                );
+              },
+            ),
+          )
         ],
       ),
       drawer: Drawer(
@@ -74,56 +40,75 @@ class _ProdukPageState extends State<ProdukPage> {
             ListTile(
               title: const Text('Logout'),
               trailing: const Icon(Icons.logout),
-              onTap: () => Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                (route) => false,
-              ),
-            ),
+              onTap: () async {
+                await LogoutBloc.logout().then((value) => {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                  )
+                });
+              },
+            )
           ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchProduk,
-              child: ListView.builder(
-                itemCount: _produkList.length,
-                itemBuilder: (context, index) {
-                  final produk = _produkList[index];
-                  return ItemProduk(
-                    produk: produk,
-                    onTap: () async {
-                      final changed = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProdukDetail(produk: produk),
-                        ),
-                      );
-                      if (changed == true) _fetchProduk();
-                    },
-                  );
-                },
-              ),
-            ),
+      body: FutureBuilder<List>(
+        future: ProdukBloc.getProduks(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) print(snapshot.error);
+          return snapshot.hasData
+              ? ListProduk(
+            list: snapshot.data,
+          )
+              : const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class ListProduk extends StatelessWidget {
+  final List? list;
+
+  const ListProduk({Key? key, this.list}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: list == null ? 0 : list!.length,
+      itemBuilder: (context, i) {
+        return ItemProduk(
+          produk: list![i],
+        );
+      },
     );
   }
 }
 
 class ItemProduk extends StatelessWidget {
   final Produk produk;
-  final VoidCallback onTap;
 
-  const ItemProduk({super.key, required this.produk, required this.onTap});
+  const ItemProduk({Key? key, required this.produk}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProdukDetail(
+              produk: produk,
+            ),
+          ),
+        );
+      },
       child: Card(
         child: ListTile(
-          title: Text(produk.namaProduk ?? '-'),
-          subtitle: Text('Rp ${produk.hargaProduk ?? 0}'),
+          title: Text(produk.namaProduk!),
+          subtitle: Text(produk.hargaProduk.toString()),
         ),
       ),
     );
